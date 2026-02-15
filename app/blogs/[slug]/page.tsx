@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getArticle, articleExists, isValidSlug } from '@/lib/blog'
+import { getArticle, articleExists, isValidSlug } from '@/lib/google-cms'
 
 // Enable ISR (1 hour)
 export const dynamic = "force-static"
-export const revalidate = 315360000; // Never 60 * 60 * 24 * 365 * 10
+export const revalidate = false;
 export const dynamicParams = true
 
 interface BlogPageProps {
