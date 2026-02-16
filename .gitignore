@@ -29,6 +29,7 @@ yarn-error.log*
 .vercel
 .trash
 .vscode
+.codex
 
 # typescript
 *.tsbuildinfo
