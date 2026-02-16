@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { isValidSlug, isCallbackHashValid } from '@/lib/google-cms'
 
@@ -28,8 +28,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const path = slug.startsWith('/') ? slug : `/${slug}`
+
     // Invalidate route cache
-    revalidatePath(`${slug}`)
+    revalidatePath(path)
+
+    // Keep sitemap-blogs.xml in sync with blog list changes
+    if (path === '/blogs' || path.startsWith('/blogs/')) {
+      revalidateTag('blogs')
+    }
 
     return NextResponse.json({
       success: true,

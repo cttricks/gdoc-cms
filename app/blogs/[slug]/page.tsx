@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCachedArticle, articleExists, isValidSlug } from '@/lib/google-cms'
+import { getBaseUrl } from '@/lib/site'
 
 // Enable ISR
 export const dynamic = "force-static"
@@ -32,23 +33,51 @@ export async function generateMetadata(
 
   try {
     const { metadata } = await getCachedArticle(slug, 'blog')
+    const baseUrl = getBaseUrl()
+    const canonicalUrl = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`
+
+    const twitterCard = (metadata.twitterCard || 'summary_large_image') as
+      | 'summary'
+      | 'summary_large_image'
+      | 'app'
+      | 'player'
 
     return {
       title: metadata.title,
       description: metadata.description,
+      keywords: metadata.keywords,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title: metadata.ogTitle || metadata.title,
         description: metadata.ogDescription || metadata.description,
-        images: metadata.ogImage ? [metadata.ogImage] : [],
+        url: canonicalUrl,
+        siteName: metadata.publisherName,
+        locale: metadata.language,
+        images: metadata.ogImage
+          ? [
+              {
+                url: metadata.ogImage,
+                alt: metadata.ogImageAlt || metadata.title,
+              },
+            ]
+          : [],
         type: 'article',
         publishedTime: metadata.publishedAt,
+        modifiedTime: metadata.modifiedAt,
         authors: metadata.author ? [metadata.author] : [],
       },
       twitter: {
-        card: 'summary_large_image',
-        title: metadata.ogTitle || metadata.title,
-        description: metadata.ogDescription || metadata.description,
-        images: metadata.ogImage ? [metadata.ogImage] : [],
+        card: twitterCard,
+        title: metadata.twitterTitle || metadata.ogTitle || metadata.title,
+        description: metadata.twitterDescription || metadata.ogDescription || metadata.description,
+        creator: metadata.twitterHandle,
+        images: metadata.twitterImage
+          ? [metadata.twitterImage]
+          : metadata.ogImage
+            ? [metadata.ogImage]
+            : [],
       },
     }
   } catch {
@@ -81,9 +110,61 @@ export default async function BlogPage({ params }: BlogPageProps) {
   }
 
   const { html, metadata } = article
+  const baseUrl = getBaseUrl()
+  const url = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`
+  const images = metadata.ogImage ? [metadata.ogImage] : undefined
+  const keywords = metadata.tags && metadata.tags.length > 0 ? metadata.tags.join(', ') : metadata.keywords
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: metadata.ogTitle || metadata.title,
+    description: metadata.ogDescription || metadata.description,
+    url,
+    datePublished: metadata.publishedAt,
+    dateModified: metadata.modifiedAt,
+    author: metadata.author
+      ? {
+          '@type': 'Person',
+          name: metadata.author,
+          url: metadata.authorUrl,
+          image: metadata.authorImage,
+        }
+      : undefined,
+    publisher: metadata.publisherName
+      ? {
+          '@type': 'Organization',
+          name: metadata.publisherName,
+          logo: metadata.publisherLogo
+            ? {
+                '@type': 'ImageObject',
+                url: metadata.publisherLogo,
+              }
+            : undefined,
+        }
+      : undefined,
+    image: images,
+    articleSection: metadata.section,
+    keywords,
+    inLanguage: metadata.language,
+    timeRequired:
+      typeof metadata.readingTimeMinutes === 'number'
+        ? `PT${metadata.readingTimeMinutes}M`
+        : undefined,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url,
+    },
+  }
 
   return (
     <article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
       <header className="article-header">
         <h1>{metadata.title}</h1>
 
