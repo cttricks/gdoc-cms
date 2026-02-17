@@ -18,23 +18,21 @@ No database.
 No CMS.  
 No rebuild on publish.
 
-
 ## The Problem
 
 My website was a static Next.js build.
 
 When I decided to add blogs, every solution felt heavy:
 
-- **Markdown + rebuild** → redeploy every time  
-- **Database** → infra + cost + complexity  
-- **Headless CMS** → overkill for my usage  
-- **Notion API** → friction in writing  
+- **Markdown + rebuild** → redeploy every time
+- **Database** → infra + cost + complexity
+- **Headless CMS** → overkill for my usage
+- **Notion API** → friction in writing
 
 I don’t write daily.  
 I write 2–3 blogs per month.
 
 Why should I introduce an entire backend for that?
-
 
 ## The Idea 💡
 
@@ -42,40 +40,45 @@ I already write everything in Google Docs.
 
 So I asked:
 
-> What if Google Docs *is* my CMS?
+> What if Google Docs _is_ my CMS?
 
 That single question changed everything.
-
 
 ## The Architecture
 
 Instead of adding infrastructure, I layered responsibilities:
 
-### 📝 Google Docs → Content Layer  
+### 📝 Google Docs → Content Layer
+
 Where I actually write.
 
-### 📊 Google Sheets → Metadata Layer  
+### 📊 Google Sheets → Metadata Layer
+
 Slug, SEO, status, timestamps.
 
-### ⚙ Google Apps Script → Publish Controller  
+### ⚙ Google Apps Script → Publish Controller
+
 Custom menu:
+
 - Publish
 - Unpublish
 - Refresh blog list
 
 It updates sheet status and triggers a secure API call.
 
-### ⚡ Next.js → Rendering Layer  
+### ⚡ Next.js → Rendering Layer
+
 - `/blogs` listing page
 - `/blogs/[slug]` dynamic article page
 - Static generation with route-level caching
 
-### 🔐 Revalidation API  
+### 🔐 Revalidation API
+
 A hash-secured endpoint that:
+
 - Verifies secret
 - Calls `revalidatePath()`
 - Regenerates only what’s needed
-
 
 ## What Happens When I Publish
 
@@ -92,7 +95,6 @@ A hash-secured endpoint that:
 No rebuild.
 No manual deploy.
 No database.
-
 
 ## What I Optimized
 
@@ -111,7 +113,6 @@ It’s not overengineered.
 
 It’s purpose-built.
 
-
 ## Tradeoffs
 
 Is this scalable to 100k posts?  
@@ -121,12 +122,11 @@ Is it perfect for someone writing 2–3 posts per month?
 Absolutely.
 
 It depends on Google’s ecosystem.  
-It requires structured metadata discipline.  
+It requires structured metadata discipline.
 
 But it removes friction.
 
 And that was the goal.
-
 
 ## The Lesson
 
@@ -143,7 +143,6 @@ I didn’t need a CMS.
 I needed a publishing workflow.
 
 So I built one.
-
 
 ## Why This Matters
 

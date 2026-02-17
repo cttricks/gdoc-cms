@@ -1,46 +1,47 @@
-import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
-import { getCachedArticle, articleExists, isValidSlug } from '@/lib/google-cms'
-import { getBaseUrl } from '@/lib/site'
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getCachedArticle, articleExists, isValidSlug } from "@/lib/google-cms";
+import { getBaseUrl } from "@/lib/site";
+import { extractHeadings } from "@/utils/extract-headings";
+import TableOfContents from "@/components/TableOfContents";
+import Link from "next/link";
 
 // Enable ISR
-export const dynamic = "force-static"
+export const dynamic = "force-static";
 export const revalidate = false;
-export const dynamicParams = true
+export const dynamicParams = true;
 
 interface BlogPageProps {
   params: {
-    slug: string
-  }
+    slug: string;
+  };
 }
 
 /**
  * Generate SEO metadata dynamically
  */
-export async function generateMetadata(
-  { params }: BlogPageProps
-): Promise<Metadata> {
-  const { slug } = params
+export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
+  const { slug } = params;
 
   if (!isValidSlug(slug)) {
-    return { title: 'Invalid Article' }
+    return { title: "Invalid Article" };
   }
 
-  const exists = await articleExists(slug)
+  const exists = await articleExists(slug);
   if (!exists) {
-    return { title: 'Article Not Found' }
+    return { title: "Article Not Found" };
   }
 
   try {
-    const { metadata } = await getCachedArticle(slug, 'blog')
-    const baseUrl = getBaseUrl()
-    const canonicalUrl = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`
+    const { metadata } = await getCachedArticle(slug, "blog");
+    const baseUrl = getBaseUrl();
+    const canonicalUrl = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`;
 
-    const twitterCard = (metadata.twitterCard || 'summary_large_image') as
-      | 'summary'
-      | 'summary_large_image'
-      | 'app'
-      | 'player'
+    const twitterCard = (metadata.twitterCard || "summary_large_image") as
+      | "summary"
+      | "summary_large_image"
+      | "app"
+      | "player";
 
     return {
       title: metadata.title,
@@ -63,7 +64,7 @@ export async function generateMetadata(
               },
             ]
           : [],
-        type: 'article',
+        type: "article",
         publishedTime: metadata.publishedAt,
         modifiedTime: metadata.modifiedAt,
         authors: metadata.author ? [metadata.author] : [],
@@ -73,15 +74,11 @@ export async function generateMetadata(
         title: metadata.twitterTitle || metadata.ogTitle || metadata.title,
         description: metadata.twitterDescription || metadata.ogDescription || metadata.description,
         creator: metadata.twitterHandle,
-        images: metadata.twitterImage
-          ? [metadata.twitterImage]
-          : metadata.ogImage
-            ? [metadata.ogImage]
-            : [],
+        images: metadata.twitterImage ? [metadata.twitterImage] : metadata.ogImage ? [metadata.ogImage] : [],
       },
-    }
+    };
   } catch {
-    return { title: 'Error Loading Article' }
+    return { title: "Error Loading Article" };
   }
 }
 
@@ -90,34 +87,36 @@ export async function generateMetadata(
  * Cached at route level via ISR
  */
 export default async function BlogPage({ params }: BlogPageProps) {
-  const { slug } = params
+  const { slug } = params;
 
   if (!isValidSlug(slug)) {
-    notFound()
+    notFound();
   }
 
-  const exists = await articleExists(slug)
+  const exists = await articleExists(slug);
   if (!exists) {
-    notFound()
+    notFound();
   }
 
-  let article
+  let article;
   try {
-    article = await getCachedArticle(slug, 'blog')
+    article = await getCachedArticle(slug, "blog");
   } catch (error) {
-    console.error(`Error loading article ${slug}:`, error)
-    notFound()
+    console.error(`Error loading article ${slug}:`, error);
+    notFound();
   }
 
-  const { html, metadata } = article
-  const baseUrl = getBaseUrl()
-  const url = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`
-  const images = metadata.ogImage ? [metadata.ogImage] : undefined
-  const keywords = metadata.tags && metadata.tags.length > 0 ? metadata.tags.join(', ') : metadata.keywords
+  const { html, metadata, related } = article;
+  const { updatedHtml, headings } = extractHeadings(html);
+
+  const baseUrl = getBaseUrl();
+  const url = metadata.canonicalUrl || `${baseUrl}/blogs/${slug}`;
+  const images = metadata.ogImage ? [metadata.ogImage] : undefined;
+  const keywords = metadata.tags && metadata.tags.length > 0 ? metadata.tags.join(", ") : metadata.keywords;
 
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     headline: metadata.ogTitle || metadata.title,
     description: metadata.ogDescription || metadata.description,
     url,
@@ -125,7 +124,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
     dateModified: metadata.modifiedAt,
     author: metadata.author
       ? {
-          '@type': 'Person',
+          "@type": "Person",
           name: metadata.author,
           url: metadata.authorUrl,
           image: metadata.authorImage,
@@ -133,11 +132,11 @@ export default async function BlogPage({ params }: BlogPageProps) {
       : undefined,
     publisher: metadata.publisherName
       ? {
-          '@type': 'Organization',
+          "@type": "Organization",
           name: metadata.publisherName,
           logo: metadata.publisherLogo
             ? {
-                '@type': 'ImageObject',
+                "@type": "ImageObject",
                 url: metadata.publisherLogo,
               }
             : undefined,
@@ -147,47 +146,80 @@ export default async function BlogPage({ params }: BlogPageProps) {
     articleSection: metadata.section,
     keywords,
     inLanguage: metadata.language,
-    timeRequired:
-      typeof metadata.readingTimeMinutes === 'number'
-        ? `PT${metadata.readingTimeMinutes}M`
-        : undefined,
+    timeRequired: typeof metadata.readingTimeMinutes === "number" ? `PT${metadata.readingTimeMinutes}M` : undefined,
     mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': url,
+      "@type": "WebPage",
+      "@id": url,
     },
-  }
+  };
 
   return (
-    <article>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
-      />
-      <header className="article-header">
-        <h1>{metadata.title}</h1>
+    <div className="blog-container">
+      <div className="blog-layout">
+        <article className="blog-body">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd),
+            }}
+          />
 
-        {metadata.author && (
-          <div className="article-meta">
-            By {metadata.author}
-            {metadata.publishedAt &&
-              ` • ${new Date(metadata.publishedAt).toLocaleDateString(
-                'en-US',
-                {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                }
-              )}`}
-          </div>
-        )}
-      </header>
+          <header className="article-header">
+            <h1>{metadata.title}</h1>
 
-      <div
-        className="article-content"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    </article>
-  )
+            {metadata.author && (
+              <div className="article-meta">
+                By {metadata.author}
+                {metadata.publishedAt &&
+                  ` • ${(() => {
+                    try {
+                      const date = new Date(metadata.publishedAt!);
+                      if (isNaN(date.getTime())) {
+                        // Parse DD/MM/YYYY HH:mm:ss manually
+                        const [datePart, timePart] = metadata.publishedAt!.split(" ");
+                        const [day, month, year] = datePart.split("/");
+                        const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        return parsedDate.toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        });
+                      }
+                      return date.toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      });
+                    } catch {
+                      return metadata.publishedAt;
+                    }
+                  })()}`}
+              </div>
+            )}
+          </header>
+
+          <div className="article-content" dangerouslySetInnerHTML={{ __html: updatedHtml }} />
+
+          {related && related.length > 0 && (
+            <section className="article-content">
+              <h3>Related Articles</h3>
+
+              <div className="related-grid">
+                {related.map((item) => (
+                  <Link key={item.slug} href={`/blogs/${item.slug}`} className="blog-card">
+                    <h2>{item.title}</h2>
+                    <p>{item.description}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </article>
+
+        <aside className="toc">
+          <TableOfContents headings={headings} />
+        </aside>
+      </div>
+    </div>
+  );
 }

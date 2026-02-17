@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap");
 
 :root {
   --bg-primary: #fafaf9;
@@ -9,10 +9,10 @@
   --accent-light: #fbbf24;
   --border: #e5e5e5;
   --shadow: rgba(0, 0, 0, 0.08);
-  
-  --font-display: 'Crimson Pro', serif;
-  --font-body: 'DM Sans', sans-serif;
-  
+
+  --font-display: "Crimson Pro", serif;
+  --font-body: "DM Sans", sans-serif;
+
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -95,7 +95,7 @@ body {
 }
 
 .nav-links a::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 0;
@@ -186,7 +186,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 2rem;
-  margin-top: 3rem;
+  margin-top: 20px;
 }
 
 .blog-card {
@@ -321,7 +321,7 @@ body {
   background: #f4f4f5;
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 0.9em;
 }
 
@@ -404,20 +404,180 @@ body {
   .hero h1 {
     font-size: 2.5rem;
   }
-  
+
   .article-header h1 {
     font-size: 2rem;
   }
-  
+
   .blog-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .nav-container {
     padding: 1rem;
   }
-  
+
   .nav-links {
     gap: 1rem;
   }
+}
+
+/* Container */
+.blog-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Two-column layout */
+.blog-layout {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+}
+
+.blog-body {
+  flex: 1;
+}
+
+/* Main content */
+.blog-content {
+  flex: 1;
+  max-width: 850px;
+}
+
+/* Article header */
+.article-header h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* Article body typography */
+.article-body {
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.article-body p {
+  margin-bottom: 16px;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border-radius: 8px;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 16px 0 16px 20px;
+}
+
+.article-body li {
+  margin-bottom: 8px;
+}
+
+/* TOC Sidebar */
+.toc {
+  width: 260px;
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+/* TOC wrapper */
+.toc-wrapper {
+  border-left: 2px solid #eee;
+  padding-left: 20px;
+}
+
+.toc-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #666;
+}
+
+/* TOC Button (replaces <a>) */
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toc-link {
+  all: unset; /* Reset all styles */
+  width: 100%;
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px 0 8px 4px;
+  border-radius: 4px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.toc-link:hover {
+  color: #000;
+  background: rgba(0, 0, 0, 0.04);
+  padding-left: 8px;
+}
+
+.toc-link.active {
+  color: #000;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.06);
+  padding-left: 12px;
+}
+
+/* Stripe-style animated indicator */
+.active-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px 0 0 2px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Indentation */
+.toc-link.level-2 {
+  padding-left: 12px;
+}
+.toc-link.level-3 {
+  padding-left: 20px;
+}
+.toc-link.level-4 {
+  padding-left: 28px;
+}
+.toc-link.level-5 {
+  padding-left: 36px;
+}
+.toc-link.level-6 {
+  padding-left: 44px;
+}
+
+/* Smooth scroll behavior for entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure headings have proper scroll margin */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  scroll-margin-top: 120px;
 }
